@@ -5,14 +5,21 @@ import java.util.GregorianCalendar;
 
 public class Receiver {
 
-    InputStream is = null;
-    OutputStream os = null;
+    private InputStream is;
+    private OutputStream os;
     private byte msgType = ControlChars.NAK;
+    byte [] msg;
 
-    public Receiver(InputStream is, OutputStream os, Boolean CBC) {
+    Receiver(InputStream is, OutputStream os, Boolean CBC) {
         this.is = is;
         this.os = os;
-        if (CBC) msgType = ControlChars.C;
+        if (CBC) {
+            this.msgType = ControlChars.C;
+            this.msg = new byte[132];
+        }
+        else{
+            this.msg = new byte[133];
+        }
     }
 
     void startTransmittion(){
@@ -27,7 +34,6 @@ public class Receiver {
 
 
         int tries = 0;
-        byte [] msg = new byte[256];
 
         try {
             os.write(msgType);
@@ -35,27 +41,50 @@ public class Receiver {
 
             while(new Date().compareTo(endTime) <= 0 || tries >= 10){
 
-//                int count = is.read(msg, 0, msg.length);
                 if(is.available() > 0){
-//                    System.out.println(is.available());
-                    is.read(msg, 0, 4);
-                    System.out.println(msg);
+                    is.read(msg, 0, msg.length);
+
+                    if(msg[0] == ControlChars.SOH){
+
+                        System.out.println("SOH found!");
+
+                        if(msg[1] == 0x01){
+
+                            System.out.println("First packet number found!");
+
+                            if(msg[2] == ~ msg[1]){
+
+                                System.out.println("Inverse of first packet number found!");
+
+                            }
+                            else{
+                                System.out.println("Inverse number error!");
+                            }
+                        }
+
+                        else{ System.out.println("Number is not 0x01");}
+
+                        System.out.println("Transmission started!");
+                    }
+                    else{
+                        System.out.println("Error SOH is not first byte!");
+                    }
+
                     break;
 
                 }
+
                 if(new Date().compareTo(tryCal.getTime()) >= 0){
-                    System.out.println("elo");
                     os.write(msgType);
                     tries++;
                     tryCal.add(Calendar.SECOND, 10);
                 }
             }
 
+
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-
     }
 
   /*

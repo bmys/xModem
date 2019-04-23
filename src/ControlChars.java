@@ -8,6 +8,7 @@ public class ControlChars {
     public static final byte CAN       = 0x18;
     public static final byte C         = 0x43;
 
+// SOH 
 
     //    public static HashMap<String, String> controlChars =
 //            new HashMap<String, String>(){{
